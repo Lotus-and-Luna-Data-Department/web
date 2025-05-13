@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}Lotus & Luna{% endblock %}</title>
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen flex">
+
+  <!-- ───── Sidebar ───── -->
+  <aside class="sidebar bg-white shadow min-h-screen">
+    <div class="px-6 py-6 flex items-center space-x-3">
+      <img src="{{ url_for('static', filename='assets/landl_small.png') }}"
+           alt="Lotus & Luna logo" class="h-8 w-auto">
+      <span class="text-xl font-bold text-gray-800">Lotus & Luna</span>
+    </div>
+    {% if current_user.is_authenticated %}
+      <nav class="space-y-2">
+        <a href="{{ url_for('dashboard.dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('ar_reporting.ar_reporting') }}">AR Report</a>
+        {% if current_user.is_admin() %}
+          <a href="{{ url_for('dashboard.prefect_ui') }}">Prefect UI</a>
+        {% endif %}
+        <a href="{{ url_for('auth.logout') }}" class="text-red-600">Logout</a>
+      </nav>
+    {% endif %}
+  </aside>
+
+  <!-- ───── Main content area ───── -->
+  <div class="flex-1 flex flex-col">
+    <main class="container px-6 py-8 flex-1">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-white border-t">
+      <div class="container px-6 py-4 text-sm text-gray-600 text-center">
+        &copy; {{ current_year }} Lotus & Luna. All rights reserved.
+      </div>
+    </footer>
+  </div>
+
+</body>
+</html>

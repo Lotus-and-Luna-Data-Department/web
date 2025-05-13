@@ -1,177 +1,164 @@
 import os
-import psycopg2
-from flask import Flask, request, render_template_string, redirect, url_for
-from flask_login import (
-    LoginManager, UserMixin, login_user, logout_user,
-    login_required, current_user
-)
-from werkzeug.security import generate_password_hash, check_password_hash
+import time
+from datetime import date
+from glob import glob
+from io import StringIO
+from csv import DictReader, DictWriter
 
-# Instantiate Flask
-app = Flask(__name__)
+from flask import Flask
+from flask_login import LoginManager
+from werkzeug.security import generate_password_hash
 
-# 1) Secret key from .env
-secret_key = os.getenv("APP_SECRET_KEY")
-if not secret_key:
-    raise ValueError("APP_SECRET_KEY not set in environment.")
-app.secret_key = secret_key
+from config import ProdConfig, TestConfig
+from db_helpers import get_db_connection
+from auth.routes import auth_bp
+from dashboard.routes import dash_bp
 
-# 2) Database environment variables from .env
-DB_HOST = os.getenv("DB_HOST_PROD")
-DB_NAME = os.getenv("DB_NAME_PROD")
-DB_USER = os.getenv("DB_USER_PROD")
-DB_PASSWORD = os.getenv("DB_PASSWORD_PROD")
-DB_PORT = os.getenv("DB_PORT_PROD")
+CSV_TABLE_MAP = {
+    "odoo_account_moves.csv":       "raw_odoo_account_moves",
+    "odoo_listing_items.csv":       "raw_odoo_listing_items",
+    "odoo_listings.csv":            "raw_odoo_listings",
+    "odoo_orders.csv":              "raw_odoo_orders",
+    "odoo_order_tags.csv":          "odoo_order_tags",
+    "odoo_products.csv":            "raw_odoo_products",
+    "odoo_sale_order_lines.csv":    "raw_odoo_order_lines",
+    "odoo_stock_pickings.csv":      "raw_odoo_stock_pickings",
+    "shopify_order_line_items.csv": "raw_shopify_order_lines",
+    "shopify_orders.csv":           "raw_shopify_orders",
+    "shopify_refund_line_items.csv":"raw_shopify_refund_lines",
+    "shopify_refunds.csv":          "raw_shopify_refunds",
+}
 
-# 3) Optional checks
-if not all([DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, DB_PORT]):
-    # It's fine to raise an error if you're sure these must exist
-    print("Warning: One or more DB environment variables are missing. The app might fail on DB calls.")
+def create_app():
+    app = Flask(__name__, template_folder="templates", static_folder="static")
+    cfg = TestConfig if os.getenv("ENV","production") == "test" else ProdConfig
+    app.config.from_object(cfg)
 
-# Initialize LoginManager
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = "login"
+    login_manager = LoginManager()
+    login_manager.login_view = app.config["LOGIN_VIEW"]
+    login_manager.init_app(app)
 
-# Simple user model
-class User(UserMixin):
-    def __init__(self, id_, username, password_hash, role):
-        self.id = str(id_)
-        self.username = username
-        self.password_hash = password_hash
-        self.role = role
+    from auth.models import load_user
+    login_manager.user_loader(load_user)
 
-    def is_admin(self):
-        return self.role == "admin"
+    # register our blueprints
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(dash_bp)
 
-# DB Helpers
-def get_db_connection():
-    return psycopg2.connect(
-        host=DB_HOST,
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        port=DB_PORT
+    # import & register the AR‐reporting blueprint
+    from dashboard.ar_reporting import ar_bp
+    app.register_blueprint(ar_bp, url_prefix="/ar")
+
+    if app.config["ENV"] == "test":
+        _bootstrap_test_db(app, cfg)
+
+    @app.context_processor
+    def inject_current_year():
+        return {"current_year": date.today().year}
+
+    return app
+
+def _bootstrap_test_db(app, cfg):
+    conn = None
+    for i in range(30):
+        print(f"[bootstrap] Attempt {i+1}/30: connecting to DB")
+        try:
+            conn = get_db_connection()
+            print("[bootstrap] Connected to DB")
+            break
+        except Exception as e:
+            print(f"[bootstrap] Connection failed: {e!r}")
+            time.sleep(1)
+    if conn is None:
+        raise RuntimeError("Could not connect to the test database after 30 tries")
+
+    cur = conn.cursor()
+
+    print("[bootstrap] Dropping and recreating public schema")
+    cur.execute("DROP SCHEMA public CASCADE;")
+    cur.execute("CREATE SCHEMA public;")
+    conn.commit()
+
+    sql_dir = os.path.join(app.root_path, "schemas")
+    all_ddls = sorted(glob(f"{sql_dir}/*.sql"))
+    deferred = [p for p in all_ddls if p.endswith("odoo_order_tags.sql")]
+    first_pass = [p for p in all_ddls if p not in deferred]
+
+    print(f"[bootstrap] Applying {len(first_pass)} DDL scripts")
+    for path in first_pass:
+        print(f"[bootstrap] Running DDL: {os.path.basename(path)}")
+        with open(path) as f:
+            cur.execute(f.read())
+
+    if deferred:
+        print(f"[bootstrap] Applying deferred DDL: {os.path.basename(deferred[0])}")
+        with open(deferred[0]) as f:
+            cur.execute(f.read())
+
+    conn.commit()
+    print("[bootstrap] DDL applied")
+
+    print(f"[bootstrap] Loading CSVs from {os.path.join(app.root_path,'output')}")
+    for fname, table in CSV_TABLE_MAP.items():
+        csv_path = os.path.join(app.root_path, "output", fname)
+        print(f"[bootstrap] Processing {fname} → {table}")
+        if not os.path.exists(csv_path):
+            raise FileNotFoundError(f"Missing CSV: {csv_path}")
+
+        # fetch table columns
+        cur.execute(
+            "SELECT column_name FROM information_schema.columns "
+            "WHERE table_schema='public' AND table_name=%s",
+            (table,)
+        )
+        table_cols = {r[0] for r in cur.fetchall()}
+
+        # fetch primary‐key columns
+        cur.execute(
+            "SELECT kcu.column_name FROM information_schema.table_constraints tc "
+            "JOIN information_schema.key_column_usage kcu "
+            "  ON tc.constraint_name=kcu.constraint_name "
+            "WHERE tc.constraint_type='PRIMARY KEY' "
+            "  AND tc.table_schema='public' AND tc.table_name=%s",
+            (table,)
+        )
+        pk_cols = [r[0] for r in cur.fetchall()]
+
+        # read, filter, dedupe, and buffer
+        with open(csv_path, newline="") as csvfile:
+            reader = DictReader(csvfile)
+            cols = [c for c in reader.fieldnames if c in table_cols]
+            buf = StringIO()
+            writer = DictWriter(buf, fieldnames=cols, lineterminator="\n")
+            writer.writeheader()
+            seen = set()
+            for row in reader:
+                key = tuple(row[k] for k in pk_cols) if pk_cols else None
+                if key and key in seen:
+                    continue
+                if key:
+                    seen.add(key)
+                writer.writerow({k: row[k] for k in cols})
+            buf.seek(0)
+
+        col_list = ", ".join(cols)
+        print(f"[bootstrap] COPY {table} ({col_list})")
+        cur.copy_expert(f"COPY {table} ({col_list}) FROM STDIN WITH CSV HEADER", buf)
+        conn.commit()
+        print(f"[bootstrap] Loaded {table}")
+
+    print("[bootstrap] Seeding test admin")
+    cur.execute(
+        "INSERT INTO users (username, password_hash, role, approved) "
+        "VALUES (%s, %s, 'admin', TRUE)",
+        (cfg.TEST_ADMIN_USERNAME, generate_password_hash(cfg.TEST_ADMIN_PASSWORD))
     )
+    conn.commit()
 
-def get_user_by_username(username):
-    conn = get_db_connection()
-    try:
-        with conn.cursor() as cur:
-            cur.execute(
-                "SELECT id, username, password_hash, role FROM users WHERE username = %s",
-                (username,)
-            )
-            row = cur.fetchone()
-            if row:
-                return User(*row)  # (id, username, password_hash, role)
-            return None
-    finally:
-        conn.close()
+    cur.close()
+    conn.close()
+    print("[bootstrap] Test DB bootstrap complete")
 
-def get_user_by_id(user_id):
-    conn = get_db_connection()
-    try:
-        with conn.cursor() as cur:
-            cur.execute(
-                "SELECT id, username, password_hash, role FROM users WHERE id = %s",
-                (user_id,)
-            )
-            row = cur.fetchone()
-            if row:
-                return User(*row)
-            return None
-    finally:
-        conn.close()
-
-# Flask-Login hook
-@login_manager.user_loader
-def load_user(user_id):
-    return get_user_by_id(user_id)
-
-#####################
-# ROUTES
-#####################
-
-# Health endpoint for Docker's healthcheck
-@app.route("/health")
-def health():
-    return "OK", 200
-
-@app.route("/")
-def home():
-    if current_user.is_authenticated:
-        return f"""
-        <h1>Welcome, {current_user.username}!</h1>
-        <p>Your role: {current_user.role}</p>
-        <p><a href="{url_for('dashboard')}">Go to Dashboard</a></p>
-        <p><a href="{url_for('logout')}">Logout</a></p>
-        """
-    else:
-        return """
-        <h1>Welcome to the Lotus & Luna Landing Page</h1>
-        <p>Please <a href="/login">login</a> to view dashboards or Prefect UI.</p>
-        """
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-
-        user = get_user_by_username(username)
-        if user and check_password_hash(user.password_hash, password):
-            login_user(user)
-            return redirect(url_for("home"))
-        else:
-            return "Invalid credentials", 401
-
-    return render_template_string("""
-    <h1>Login</h1>
-    <form method="POST">
-        Username: <input name="username" type="text"><br/>
-        Password: <input name="password" type="password"><br/>
-        <button type="submit">Login</button>
-    </form>
-    """)
-
-@app.route("/logout")
-@login_required
-def logout():
-    logout_user()
-    return "You have been logged out. <a href='/'>Return Home</a>"
-
-@app.route("/dashboard")
-@login_required
-def dashboard():
-    links = []
-    links.append("<a href='https://app.powerbi.com/home'>Power BI</a>")
-    if current_user.is_admin():
-        links.append("<a href='/prefect'>Prefect UI</a> (Admin only)")
-
-    html_links = "<br/>".join(links)
-    return f"""
-    <h1>Dashboard</h1>
-    <p>Hello, {current_user.username}! Here are your available links:</p>
-    {html_links}
-    <p><a href="/">Home</a></p>
-    """
-
-@app.route("/prefect")
-@login_required
-def prefect_redirect():
-    if not current_user.is_admin():
-        return "Access denied", 403
-    return """
-    <h1>Prefect UI</h1>
-    <p>This would route you to the real Prefect UI at /prefect, or do a redirect.</p>
-    """
-
-@app.route("/genpass/<plaintext>")
-def genpass(plaintext):
-    hashed = generate_password_hash(plaintext)
-    return f"Hashed password: {hashed}"
-
-# Actually run the app on 0.0.0.0:8000
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=False)
+    app = create_app()
+    app.run(host="0.0.0.0", port=8000)

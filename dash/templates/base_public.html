@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}Lotus & Luna{% endblock %}</title>
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+
+  <main class="max-w-md bg-white rounded-lg shadow p-8">
+
+    <!-- hero image -->
+    <img src="{{ url_for('static', filename='assets/landl_big.png') }}"
+         alt="Lotus & Luna" class="w-full rounded-lg mb-6">
+
+    {# ---- flash messages ---- #}
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+      {% if msgs %}
+        <div class="space-y-2 mb-6">
+          {% for cat, msg in msgs %}
+            <div class="alert alert-{{ cat }}">{{ msg }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+</body>
+</html>

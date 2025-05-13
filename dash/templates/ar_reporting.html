@@ -1,0 +1,58 @@
+{% extends "base_dashboard.html" %}
+{% block title %}AR Summary as of {{ today }}{% endblock %}
+
+{% set buckets = ['0–7','8–14','15–30','31–60','61–90','90+'] %}
+
+{% block content %}
+  <div class="bg-white shadow rounded-lg p-6">
+    <h1 class="text-2xl font-bold mb-4">AR Summary as of {{ today }}</h1>
+
+    <!-- FILTER FORM -->
+    <form method="get" class="mb-6 flex flex-wrap gap-4 items-end">
+      <div>
+        <label class="block text-sm font-medium mb-1" for="channel">Channel</label>
+        <select id="channel" name="channel" multiple
+                class="border rounded px-3 py-2 text-sm">
+          {% for c in ['Faire','Wholesale'] %}
+            <option value="{{ c }}"
+              {% if c in request.args.getlist('channel') %}selected{% endif %}>
+              {{ c }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit"
+              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        Apply
+      </button>
+      <a href="{{ url_for('ar_reporting.ar_reporting') }}"
+         class="text-sm text-gray-600 hover:underline">Reset</a>
+    </form>
+
+    <!-- AGING TABLE -->
+    <div class="overflow-x-auto">
+      <table class="min-w-full table-auto border-collapse">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="px-4 py-2 text-left">Channel</th>
+            {% for b in buckets %}
+              <th class="px-4 py-2 text-right">{{ b }} days</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr class="{{ loop.cycle('','bg-gray-50') }}">
+              <td class="px-4 py-2">{{ row.channel }}</td>
+              {% for b in buckets %}
+                <td class="px-4 py-2 text-right">
+                  {{ "{:,.0f}".format(row[b]) }}
+                </td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
