@@ -1,0 +1,101 @@
+/* -------- Base reset + font ------------------------------------------ */
+@import url('https://cdn.jsdelivr.net/npm/inter-ui@4.18.0/inter.min.css');
+
+html,body,#app{margin:0;padding:0;font-family:'Inter',sans-serif;}
+
+/* -------- Utilities --------------------------------------------------- */
+.bg-gray-100{background:#f3f4f6;}
+.bg-white   {background:#ffffff;}
+.text-gray-600{color:#4b5563;}
+.text-gray-700{color:#374151;}
+.text-gray-800{color:#1f2937;}
+.text-blue-600{color:#2563eb;}
+.text-red-600 {color:#dc2626;}
+.text-green-600{color:#16a34a;}
+
+.bg-blue-600 {background:#2563eb;}
+.bg-blue-700 {background:#1d4ed8;}
+.bg-green-600{background:#16a34a;}
+.bg-green-700{background:#15803d;}
+
+.hover\:text-blue-600:hover{color:#2563eb;}
+.hover\:text-red-600:hover {color:#dc2626;}
+.hover\:underline:hover    {text-decoration:underline;}
+.hover\:bg-blue-700:hover  {background:#1d4ed8;}
+.hover\:bg-green-700:hover {background:#15803d;}
+
+.shadow{box-shadow:0 1px 3px rgba(0,0,0,.1);}
+.border-t{border-top:1px solid #e5e7eb;}
+
+.min-h-screen{min-height:100vh;}
+.flex{display:flex;}
+.flex-1{flex:1;}
+.items-center{align-items:center;}
+.justify-between{justify-content:space-between;}
+.justify-center{justify-content:center;}
+
+.container{max-width:1200px;margin:0 auto;}
+
+.px-4{padding:0 1rem;}
+.px-6{padding:0 1.5rem;}
+.py-4{padding:1rem 0;}
+.py-6{padding:1.5rem 0;}
+.py-8{padding:2rem 0;}
+
+.text-2xl{font-size:1.5rem;line-height:2rem;}
+.font-bold{font-weight:700;}
+
+.space-x-6>*+*{margin-left:1.5rem;}
+.space-y-2>*+*{margin-top:.5rem;}
+.space-y-4>*+*{margin-top:1rem;}
+
+.border{border:1px solid #d1d5db;}
+.rounded-lg{border-radius:.5rem;}
+
+.overflow-hidden{overflow:hidden;}
+.min-w-full{min-width:100%;}
+.max-w-md{max-width:28rem;}
+
+.w-full{width:100%;}
+.gap-4{gap:1rem;}
+.table-auto{table-layout:auto;}
+.border-collapse{border-collapse:collapse;}
+
+/* -------- Components -------------------------------------------------- */
+.btn{
+  display:inline-block;
+  padding:.5rem 1.25rem;
+  border-radius:.375rem;
+  font-weight:600;
+  text-align:center;
+}
+.btn-blue{background:#2563eb;color:#fff;}
+.btn-blue:hover{background:#1d4ed8;}
+.btn-green{background:#16a34a;color:#fff;}
+.btn-green:hover{background:#15803d;}
+
+.input{
+  width:100%;
+  padding:.5rem .75rem;
+  border:1px solid #d1d5db;
+  border-radius:.375rem;
+}
+
+/* -------- Layout helpers --------------------------------------------- */
+.sidebar{
+  width:220px;
+  flex-shrink:0;
+}
+.sidebar a{
+  display:block;
+  padding:.5rem 1.25rem;
+  color:#374151;
+}
+.sidebar a:hover{color:#2563eb;background:#f3f4f6;}
+
+/* === Alert helpers ================================================= */
+.alert{padding:.75rem 1rem;border-radius:.375rem;font-size:.875rem;font-weight:500;}
+.alert-success{background:#dcfce7;color:#166534;}
+.alert-warning{background:#fef9c3;color:#92400e;}
+.alert-danger {background:#fee2e2;color:#991b1b;}
+.alert-info   {background:#dbeafe;color:#1e40af;}

@@ -1,0 +1,9 @@
+{% extends "base_public.html" %}
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+  <h1 class="text-2xl font-bold mb-4 text-center">Welcome to Lotus & Luna</h1>
+  <p class="text-center">
+    Please <a href="{{ url_for('auth.login') }}" class="text-blue-600 hover:underline">log in</a> to continue.
+  </p>
+{% endblock %}

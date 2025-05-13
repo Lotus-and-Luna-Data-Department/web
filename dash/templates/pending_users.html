@@ -1,0 +1,41 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Pending Approvals{% endblock %}
+
+{% block content %}
+  <div class="bg-white shadow rounded-lg p-8">
+    <h1 class="text-2xl font-bold mb-4">Pending User Approvals</h1>
+
+    {% if pendings %}
+      <table class="min-w-full border-collapse">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="px-4 py-2 text-left">Username</th>
+            <th class="px-4 py-2 text-left">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in pendings %}
+            <tr class="{{ loop.cycle('','bg-gray-50') }}">
+              <td class="px-4 py-2">{{ u.username }}</td>
+              <td class="px-4 py-2">
+                <a href="{{ url_for('dashboard.approve_user', user_id=u.id) }}"
+                   class="text-green-600 hover:underline">
+                  Approve
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="text-gray-600">No users awaiting approval.</p>
+    {% endif %}
+
+    <p class="mt-6">
+      <a href="{{ url_for('dashboard.dashboard') }}"
+         class="text-blue-600 hover:underline">
+        ← Back to Dashboard
+      </a>
+    </p>
+  </div>
+{% endblock %}
