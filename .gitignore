@@ -5,3 +5,11 @@
 # Ignore Python byte-code
 *.pyc
 __pycache__/
+
+# Ignore .env
+.env
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+
