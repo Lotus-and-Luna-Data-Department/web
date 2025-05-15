@@ -1,29 +1,33 @@
-FROM python:3.13-slim
+FROM python:3.10-slim
 
-# 1) Set working directory
 WORKDIR /app
+ENV PYTHONPATH=/app       
 
-# 2) Install minimal system deps for curl & PostgreSQL client
+# Install system deps for curl, PostgreSQL, and Python build tools
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl libpq-dev gcc \
+    && apt-get install -y --no-install-recommends \
+       curl \
+       libpq-dev \
+       gcc \
+       python3-dev \
+       build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# 3) Copy and install Python deps first (cache-friendly)
+# Copy & install Python deps
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip \
+# Preinstall setuptools & wheel so pip can build any wheels
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
     && pip install --no-cache-dir -r requirements.txt
 
-# 4) Copy only the application code
-COPY dash/ ./dash/
-COPY templates/ ./templates/
-COPY static/ ./static/
+# Copy the app code
+COPY webapp/ ./webapp/
 
-# 5) Expose the port your app listens on
+# Expose port
 EXPOSE 8000
 
-# 6) Healthcheck for Compose readiness
+# Healthcheck endpoint
 HEALTHCHECK --interval=30s --timeout=3s \
   CMD curl --fail http://localhost:8000/health || exit 1
 
-# 7) Final command: run the Flask app
-CMD ["gunicorn", "dash.app:server", "--bind", "0.0.0.0:8000", "--workers", "2"]
+# Run the app
+CMD ["python", "webapp/app.py"]

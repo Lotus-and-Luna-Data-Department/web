@@ -1,0 +1,190 @@
+.
+├── dash_directory.txt
+├── docker
+│   └── Dockerfile.app
+├── .env
+├── .env.example
+├── .git
+│   ├── branches
+│   ├── COMMIT_EDITMSG
+│   ├── config
+│   ├── description
+│   ├── FETCH_HEAD
+│   ├── HEAD
+│   ├── hooks
+│   │   ├── applypatch-msg.sample
+│   │   ├── commit-msg.sample
+│   │   ├── fsmonitor-watchman.sample
+│   │   ├── post-update.sample
+│   │   ├── pre-applypatch.sample
+│   │   ├── pre-commit.sample
+│   │   ├── pre-merge-commit.sample
+│   │   ├── prepare-commit-msg.sample
+│   │   ├── pre-push.sample
+│   │   ├── pre-rebase.sample
+│   │   ├── pre-receive.sample
+│   │   ├── push-to-checkout.sample
+│   │   └── update.sample
+│   ├── index
+│   ├── info
+│   │   └── exclude
+│   ├── logs
+│   │   ├── HEAD
+│   │   └── refs
+│   │       ├── heads
+│   │       │   ├── ci
+│   │       │   │   ├── lint-infra
+│   │       │   │   └── setup-web
+│   │       │   └── main
+│   │       └── remotes
+│   │           └── origin
+│   │               ├── ci
+│   │               │   └── setup-web
+│   │               └── main
+│   ├── objects
+│   │   ├── 00
+│   │   │   ├── deleted for brevity
+│   │   ├── info
+│   │   └── pack
+│   ├── ORIG_HEAD
+│   ├── packed-refs
+│   └── refs
+│       ├── heads
+│       │   ├── ci
+│       │   │   ├── lint-infra
+│       │   │   └── setup-web
+│       │   └── main
+│       ├── remotes
+│       │   └── origin
+│       │       ├── ci
+│       │       │   └── setup-web
+│       │       └── main
+│       └── tags
+├── .github
+│   └── workflows
+│       └── ci.yml
+├── .gitignore
+├── .pytest_cache
+│   ├── CACHEDIR.TAG
+│   ├── .gitignore
+│   ├── README.md
+│   └── v
+│       └── cache
+│           ├── lastfailed
+│           ├── nodeids
+│           └── stepwise
+├── pytest.ini
+├── requirements.txt
+├── tests
+│   ├── __pycache__
+│   │   └── test_app.cpython-310-pytest-8.3.5.pyc
+│   └── test_app.py
+├── .venv
+│   ├── bin
+│   │   ├── activate
+│   │   ├── activate.csh
+│   │   ├── activate.fish
+│   │   ├── Activate.ps1
+│   │   ├── dotenv
+│   │   ├── f2py
+│   │   ├── f2py3
+│   │   ├── f2py3.10
+│   │   ├── flask
+│   │   ├── pip
+│   │   ├── pip3
+│   │   ├── pip3.10
+│   │   ├── py.test
+│   │   ├── pytest
+│   │   ├── python -> python3
+│   │   ├── python3 -> /usr/bin/python3
+│   │   └── python3.10 -> python3
+│   ├── include
+│   ├── lib
+│   │   └── python3.10
+│   │       └── site-packages
+│   │           ├─ Deleted for brevity
+│   ├── lib64 -> lib
+│   └── pyvenv.cfg
+└── webapp
+    ├── app.py
+    ├── auth
+    │   ├── __init__.py
+    │   ├── models.py
+    │   ├── __pycache__
+    │   │   ├── __init__.cpython-310.pyc
+    │   │   ├── models.cpython-310.pyc
+    │   │   └── routes.cpython-310.pyc
+    │   └── routes.py
+    ├── config.py
+    ├── dashboard
+    │   ├── ar_reporting.py
+    │   ├── __init__.py
+    │   ├── __pycache__
+    │   │   ├── ar_reporting.cpython-310.pyc
+    │   │   ├── __init__.cpython-310.pyc
+    │   │   └── routes.cpython-310.pyc
+    │   └── routes.py
+    ├── db_helpers.py
+    ├── __init__.py
+    ├── output
+    │   ├── delivery_level.csv
+    │   ├── odoo_account_moves.csv
+    │   ├── odoo_account_payments.csv
+    │   ├── odoo_listing_items.csv
+    │   ├── odoo_listings.csv
+    │   ├── odoo_orders.csv
+    │   ├── odoo_order_tags.csv
+    │   ├── odoo_products.csv
+    │   ├── odoo_sale_order_lines.csv
+    │   ├── odoo_stock_pickings.csv
+    │   ├── overdue_sos.csv
+    │   ├── shopify_order_line_items.csv
+    │   ├── shopify_orders.csv
+    │   ├── shopify_refund_line_items.csv
+    │   └── shopify_refunds.csv
+    ├── __pycache__
+    │   ├── app.cpython-310.pyc
+    │   ├── config.cpython-310.pyc
+    │   ├── db_helpers.cpython-310.pyc
+    │   └── __init__.cpython-310.pyc
+    ├── reports
+    │   ├── ar_service.py
+    │   ├── __init__.py
+    │   └── __pycache__
+    │       ├── ar_service.cpython-310.pyc
+    │       └── __init__.cpython-310.pyc
+    ├── requirements.txt
+    ├── schemas
+    │   ├── last_sync.sql
+    │   ├── odoo_order_tags.sql
+    │   ├── raw_odoo_account_moves.sql
+    │   ├── raw_odoo_account_payments.sql
+    │   ├── raw_odoo_listing_items.sql
+    │   ├── raw_odoo_listings.sql
+    │   ├── raw_odoo_order_lines.sql
+    │   ├── raw_odoo_orders.sql
+    │   ├── raw_odoo_products.sql
+    │   ├── raw_odoo_stock_pickings.sql
+    │   ├── raw_shopify_order_lines.sql
+    │   ├── raw_shopify_orders.sql
+    │   ├── raw_shopify_refund_line_items.sql
+    │   ├── raw_shopify_refunds.sql
+    │   └── users.sql
+    ├── static
+    │   ├── assets
+    │   │   ├── landl_big.png
+    │   │   └── landl_small.png
+    │   └── css
+    │       └── style.css
+    ├── templates
+    │   ├── ar_reporting.html
+    │   ├── base_dashboard.html
+    │   ├── base_public.html
+    │   ├── dashboard.html
+    │   ├── home.html
+    │   ├── login.html
+    │   ├── pending_users.html
+    │   └── register.html
+    └── test.db
+
+1001 directories, 11478 files
