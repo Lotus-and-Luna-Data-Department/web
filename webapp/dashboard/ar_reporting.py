@@ -1,7 +1,7 @@
 from datetime import date
 from flask import Blueprint, render_template, request
 from flask_login import login_required
-from reports.ar_service import fetch_ar_aging_report
+from webapp.reports.ar_service import fetch_ar_aging_report
 
 ar_bp = Blueprint("ar_reporting", __name__, template_folder="templates")
 

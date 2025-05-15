@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, url_for, redirect, abort, flash
 from flask_login import login_required, current_user
-from db_helpers import get_db_connection
+from webapp.db_helpers import get_db_connection
 
 dash_bp = Blueprint("dashboard", __name__, template_folder="templates")
 

@@ -1,3 +1,4 @@
+# webapp/app.py
 import os
 import time
 from datetime import date
@@ -9,10 +10,13 @@ from flask import Flask
 from flask_login import LoginManager
 from werkzeug.security import generate_password_hash
 
-from config import ProdConfig, TestConfig
-from db_helpers import get_db_connection
-from auth.routes import auth_bp
-from dashboard.routes import dash_bp
+from webapp.config import ProdConfig, TestConfig
+from webapp.db_helpers import get_db_connection
+from webapp.auth.routes import auth_bp
+from webapp.dashboard.routes import dash_bp
+from webapp.dashboard.ar_reporting import ar_bp
+from webapp.dashboard.ar_reporting import ar_bp
+from webapp.auth.models import load_user
 
 CSV_TABLE_MAP = {
     "odoo_account_moves.csv":       "raw_odoo_account_moves",
@@ -38,7 +42,6 @@ def create_app():
     login_manager.login_view = app.config["LOGIN_VIEW"]
     login_manager.init_app(app)
 
-    from auth.models import load_user
     login_manager.user_loader(load_user)
 
     # register our blueprints
@@ -46,7 +49,6 @@ def create_app():
     app.register_blueprint(dash_bp)
 
     # import & register the AR‐reporting blueprint
-    from dashboard.ar_reporting import ar_bp
     app.register_blueprint(ar_bp, url_prefix="/ar")
 
     if app.config["ENV"] == "test":

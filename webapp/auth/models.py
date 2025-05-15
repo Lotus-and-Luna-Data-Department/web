@@ -1,6 +1,6 @@
-# dash/auth/models.py
+# webapp/auth/models.py
 from flask_login import UserMixin
-from db_helpers import get_db_connection
+from webapp.db_helpers import get_db_connection
 
 class User(UserMixin):
     def __init__(self, id_, username, password_hash, role):

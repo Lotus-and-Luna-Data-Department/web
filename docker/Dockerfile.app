@@ -1,18 +1,33 @@
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 WORKDIR /app
+ENV PYTHONPATH=/app       
 
-# Install system packages, including curl
-RUN apt-get update && apt-get install -y curl
+# Install system deps for curl, PostgreSQL, and Python build tools
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       curl \
+       libpq-dev \
+       gcc \
+       python3-dev \
+       build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy your code
-COPY dash/app.py /app/app.py
-COPY dash/requirements.txt /app/requirements.txt
+# Copy & install Python deps
+COPY requirements.txt .
+# Preinstall setuptools & wheel so pip can build any wheels
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && pip install --no-cache-dir -r requirements.txt
 
-# Install python packages
-RUN pip install --no-cache-dir -r /app/requirements.txt
+# Copy the app code
+COPY webapp/ ./webapp/
 
-# Expose port 8000
+# Expose port
 EXPOSE 8000
 
-CMD ["python", "/app/app.py"]
+# Healthcheck endpoint
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD curl --fail http://localhost:8000/health || exit 1
+
+# Run the app
+CMD ["python", "webapp/app.py"]

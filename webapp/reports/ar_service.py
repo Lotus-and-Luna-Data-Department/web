@@ -7,9 +7,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from datetime import date
 import pandas as pd
-from db_helpers import get_db_connection
+from webapp.db_helpers import get_db_connection
 
-def build_delivery_level_df(
+def fetch_ar_aging_report(
     as_of: date | None = None,
     channels: list[str] | None = None,
     debug: bool = True,
@@ -251,6 +251,6 @@ def build_delivery_level_df(
 
 if __name__ == "__main__":
     os.environ["ENV"] = "test"
-    df = build_delivery_level_df(debug=True)
+    df = fetch_ar_aging_report(debug=True)
     print("\nDelivery‑level sample:")
     print(df.head().to_string(index=False))
